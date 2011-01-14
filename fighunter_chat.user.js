@@ -4,6 +4,24 @@
 // @include        http://www.fighunter.com/*
 // ==/UserScript==
 
+/*
+Much of the codebase is a copy of jQuery and Sizzle, which are copyrighted by 
+John Resig and the Dojo Foundation respectively, and are both used under the
+open-source MIT License. They appear at the end of this file.
+
+To the extent possible by law, I hereby waive all copyright and any related 
+rights to the remaining code under the Creative Commons Zero waiver/license, 
+which you may read online at:
+
+>    [http://creativecommons.org/publicdomain/zero/1.0/legalcode][cc]
+
+This means that you may copy, distribute, modify, and use my code without any 
+fear of lawsuits from me. As it says at the above URL, my code is provided 
+with NO WARRANTIES OF ANY KIND. I do humbly request that you provide me some 
+sort of attribution or credit if you use it; but I leave that decision up to 
+you. 
+*/
+
 /*jslint white: true, onevar: true, undef: true, nomen: true, regexp: true, plusplus: true, bitwise: true, newcap: false, strict: true */
 /*global window, unsafeWindow: true, alert, document, GM_registerMenuCommand, init_jquery, $ */
 
