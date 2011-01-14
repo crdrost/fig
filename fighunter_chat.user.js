@@ -66,7 +66,7 @@ try {
 		* yet done. Ideally, the autocolor script should apply to all textareas
 		* that can be submitted, but that is also not yet done.
 		*/
-		if (typeof GM_registerMenuCommand === "function") {
+		if (typeof unsafeWindow === "undefined") {
 			// initial caps is reserved by JSLint for object constructors, which
 			// GM_registerMenuCommand is not.
 			var menu = GM_registerMenuCommand; 
