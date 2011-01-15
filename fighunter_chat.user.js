@@ -1,13 +1,14 @@
 // ==UserScript==
-// @name           FigHunter Chat
-// @namespace      http://code.drostie.org/
-// @include        http://www.fighunter.com/*
+// @name          Drostie's FigHunter Chat Script (v. 1.00b)
+// @namespace     http://code.drostie.org/
+// @include       http://www.fighunter.com/*
+// @match         http://www.fighunter.com/*
 // ==/UserScript==
 
 /*
-Much of the codebase is a copy of jQuery and Sizzle, which are copyrighted by 
+Much of this codebase is a copy of jQuery and Sizzle, which are copyrighted by 
 John Resig and the Dojo Foundation respectively, and are both used under the
-open-source MIT License. They appear at the end of this file.
+open-source MIT License. 
 
 To the extent possible by law, I hereby waive all copyright and any related 
 rights to the remaining code under the Creative Commons Zero waiver/license, 
@@ -22,189 +23,10 @@ sort of attribution or credit if you use it; but I leave that decision up to
 you. 
 */
 
-/*jslint white: true, onevar: true, undef: true, nomen: true, regexp: true, plusplus: true, bitwise: true, newcap: false, strict: true */
-/*global window, unsafeWindow: true, alert, document, GM_registerMenuCommand, init_jquery, $ */
-
-if (typeof unsafeWindow === "undefined") {
-	// applies in Chromium
-	unsafeWindow = window;
-}
-
-try {
-	init_jquery();
-	var params = {},
-		color = "[#70b32d]", 
-		names = ["Drostie"], // for eventual use in pinging a user when their name is used.
-		$ = unsafeWindow.$; 
-
-	// Colors a string in the FigHunter BBCode for colors. Designed 
-	// to "de-nest" the colors, since my experiments suggested a 
-	// lack of support for colors nested within each other.
-	function colorize(string) {
-		"use strict";
-		// `either` detects either a color start or end tag;
-		// `empty` detects a color tag containing only whitespace.
-		var either = /\[#[0-9a-f]{6}\]|\[\/#\]/gi,
-			empty  = /\[#[0-9a-f]{6}\](\s*)\[\/#\]/gi,
-			denest = function (x) {
-				return "[/#]" + (x === "[/#]" ? color : x);
-			},
-			tmp = color + string.replace(either, denest) + "[/#]";	
-		return tmp.replace(empty, "$1");
-	}
-	function handle_pm(string, fun) {
-		"use strict";
-		var regex = /^(?:@[a-z0-9 ]+: )?/i,
-			match = regex.exec(string)[0];
-		return match + fun(string.slice(match.length));
-	}
-	(function () {
-		"use strict";
-		/* This bit is ignored in Chromium. It allows you to retrieve the color 
-		* scheme manually by a little clicky button. I have thought about doing 
-		* the same cross-browser by injecting a DIV somewhere, but it is not 
-		* yet done. Ideally, the autocolor script should apply to all textareas
-		* that can be submitted, but that is also not yet done.
-		*/
-		if (typeof unsafeWindow === "undefined") {
-			// initial caps is reserved by JSLint for object constructors, which
-			// GM_registerMenuCommand is not.
-			var menu = GM_registerMenuCommand; 
-			menu("Retrieve color", function () {
-				alert(color);
-			});
-		}
-	}());
-
-	function chat_edit(id) {
-		"use strict";
-		var text = document.getElementById(id),
-			multimatch = false;
-
-		// Enter key -- color overrides.
-		text.addEventListener("keydown", function (event) {
-			if (event.keyCode === 13) { // Enter
-				try {
-					text.value = handle_pm(text.value, function (v) {
-						var id;
-						if (v.slice(0, 4) === "/me ") {
-							id = $("#topbar span a").get(0).href
-								.match(/[?&]u=(\d+)/)[1];
-							v = "[u" + id + "] " + v.slice(4);
-						}
-						return colorize(v);
-					});
-				} catch (e) {
-					alert(e);
-				}
-			}
-		}, false);
-		
-		// Tab key -- tab complete
-		function tab_complete(name, params) {
-			var p = params, 
-				base = p.string.slice(0, p.start) + name;
-			if (p.start === 0 || 
-				p.start === 1 && base.charAt(0) === "@") {
-				base += ': ';
-			}
-			p.target.value = base + p.string.slice(p.end);
-			p.target.selectionStart = base.length;
-			p.target.selectionEnd = base.length;
-			p.target.focus();
-		}
-		$("#input_area").keydown(function (event) {
-			if (event.keyCode === 9) { // Tab
-				if (multimatch === false) {
-					var start, end, members, match, regex, params;
-					end = this.selectionEnd;
-					regex = /\b([a-z0-9]*?)$/i;
-					match = this.value.substring(0, end)
-						.match(regex)[1].toLowerCase();
-					start = end - match.length;
-					params = { 
-						start: start, 
-						end: end, 
-						string: this.value,
-						target: this
-					};
-					members = $("#PeopleList span.nobr a")
-						.map(function () { return this.innerHTML; })
-						.filter(function () {
-							return (this.length >= match.length) &&  
-								this.slice(0, match.length).toLowerCase() === match;
-						});
-					if (members.length > 1) {
-						multimatch = {
-							current: 0, 
-							members: members, 
-							params: params,
-							increment: function () {
-								this.current += 1;
-								this.current %= this.members.length;
-							},
-							get: function () {
-								return this.members[this.current];
-							}
-						};
-					}
-					if (members.length >= 1) {
-						tab_complete(members[0], params);
-					}
-				} 
-			} else {
-				multimatch = false;
-			}
-		});
-		$("input.button").keydown(function (event) {
-			if (event.keyCode === 9 && multimatch !== false) {
-				multimatch.increment();
-				tab_complete(multimatch.get(), multimatch.params);
-			}
-		});
-	}
-
-
-	// create the params[] associative array.
-	if (typeof window.location.search === "string") {
-		window.location.search.slice(1).split("&").map(
-			function (x) {
-				"use strict";
-				x = x.split("=");
-				params[x[0]] = x.slice(1).join("=");
-			}
-		);
-	}
-
-	// branch based on location
-	switch (window.location.pathname) {
-		case "/":
-		case "/index.php":
-			switch (params.page) {
-				case "chat":
-					chat_edit("input_area");
-				break;
-			}
-		break;
-		/* commented out until I can figure out how to get this working.
-		case "forum_thread":
-		case "forum":
-			$("form textarea").blur(function () {
-				this.value = colorize(this.value);
-			});
-		break;
-		*/
-	}
-} catch (e) {
-	alert("Drostie's Fig Hunter Chat script generated an error: \n\n" + e);
-}
-
-// wrapper is provided so that this function gets "hoisted" by JavaScript:
-// basically this means that I can define it here but use it in the first lines 
-// of the script. This also makes the remaining code friendlier with JSLint. 
-// Also, it is called on unsafeWindow rather than on window, so that it works 
-// in Firefox's GreaseMonkey.
-function init_jquery() {
+// This is jQuery in a function wrapper. The only thing that has been changed 
+// is that it is called on 'win' rather than on window. To skip it, ctrl-F for 
+// the phrase "END JQUERY", in caps.
+function init_jquery(win) {
 	/*!
 	* jQuery JavaScript Library v1.4.4
 	* http://jquery.com/
@@ -371,6 +193,271 @@ function init_jquery() {
 	e):f.css(e)}};c.fn.extend({position:function(){if(!this[0])return null;var a=this[0],b=this.offsetParent(),d=this.offset(),e=Ia.test(b[0].nodeName)?{top:0,left:0}:b.offset();d.top-=parseFloat(c.css(a,"marginTop"))||0;d.left-=parseFloat(c.css(a,"marginLeft"))||0;e.top+=parseFloat(c.css(b[0],"borderTopWidth"))||0;e.left+=parseFloat(c.css(b[0],"borderLeftWidth"))||0;return{top:d.top-e.top,left:d.left-e.left}},offsetParent:function(){return this.map(function(){for(var a=this.offsetParent||t.body;a&&!Ia.test(a.nodeName)&&
 	c.css(a,"position")==="static";)a=a.offsetParent;return a})}});c.each(["Left","Top"],function(a,b){var d="scroll"+b;c.fn[d]=function(e){var f=this[0],h;if(!f)return null;if(e!==B)return this.each(function(){if(h=fa(this))h.scrollTo(!a?e:c(h).scrollLeft(),a?e:c(h).scrollTop());else this[d]=e});else return(h=fa(f))?"pageXOffset"in h?h[a?"pageYOffset":"pageXOffset"]:c.support.boxModel&&h.document.documentElement[d]||h.document.body[d]:f[d]}});c.each(["Height","Width"],function(a,b){var d=b.toLowerCase();
 	c.fn["inner"+b]=function(){return this[0]?parseFloat(c.css(this[0],d,"padding")):null};c.fn["outer"+b]=function(e){return this[0]?parseFloat(c.css(this[0],d,e?"margin":"border")):null};c.fn[d]=function(e){var f=this[0];if(!f)return e==null?null:this;if(c.isFunction(e))return this.each(function(l){var k=c(this);k[d](e.call(this,l,k[d]()))});if(c.isWindow(f))return f.document.compatMode==="CSS1Compat"&&f.document.documentElement["client"+b]||f.document.body["client"+b];else if(f.nodeType===9)return Math.max(f.documentElement["client"+
-	b],f.body["scroll"+b],f.documentElement["scroll"+b],f.body["offset"+b],f.documentElement["offset"+b]);else if(e===B){f=c.css(f,d);var h=parseFloat(f);return c.isNaN(h)?f:h}else return this.css(d,typeof e==="string"?e:e+"px")}})})(unsafeWindow);
+	b],f.body["scroll"+b],f.documentElement["scroll"+b],f.body["offset"+b],f.documentElement["offset"+b]);else if(e===B){f=c.css(f,d);var h=parseFloat(f);return c.isNaN(h)?f:h}else return this.css(d,typeof e==="string"?e:e+"px")}})})(win);
+} // END JQUERY //
+
+// PRELUDE: includes jQuery, detection of chromium, and a sandbox() function:
+// JSLint is being annoying with try/catch constructions today, so this is a
+// syntactic workaround that also automatically creates the necessary text. It 
+// also creates a nice place to store "use strict" statements and a variable scope.
+function sandbox(f) {
+	"use strict";
+	try { 
+		return f();
+	} catch (e) {
+		alert("Drostie's Fig Hunter Chat script generated an error: \n\n" + e);
+	}
 }
 
+// Chromium compatibility layer
+var local_window = (typeof unsafeWindow === "undefined") ? 
+		window : unsafeWindow,
+	chromium = unsafeWindow === window,
+	storage = local_window.localStorage;
+
+sandbox(function () { 
+	if (chromium) {
+		init_jquery(local_window);
+	}
+});
+
+
+// SCRIPT: the remainder of this file can be scanned with JSLint.
+
+/*jslint white: true, onevar: true, undef: true, nomen: true, regexp: true, plusplus: true, bitwise: true, newcap: false, strict: true */
+/*global local_window, storage, alert, document, init_jquery, chromium, sandbox */
+
+//
+
+//sandbox(function () {
+//	"use strict";
+//	alert("working");
+//	storage.dchat_color = "[#70b32d]";
+//});
+
+
+sandbox(function () {
+	"use strict";
+	function subs(x, y, z) {
+		return (x === y) ? z : x;
+	}
+	var params = {},
+		$ = local_window.$, 
+		default_color = ({
+			CYN: "[#4CD5FE]", GRN: "[#80a464]", BLU: "[#188BB6]", 
+			RED: "[#cc4040]", PPL: "[#a5c]",    ORG: "[#d85]",    
+			GRY: "[#aaa]",    BWN: "[#776655]", PNK: "[#f8f]",    
+			GLD: "[#a9a954]", BLK: "[#585163]", WHT: "[#fff8f0]",    
+			TQS: "[#2bc]",    LIM: "[#a0c444]", SKY: "[#ccccff]",    
+			YEL: "[#cc4]",    BEG: "[#dca]",    YLT: "[#297529]",    
+			NVY: "[#77a]",    SCR: "[#FF6450]", LLC: "[#b8a2c8]",    
+			RYL: "[#8f8040]", SYS: "[#f90]"
+		}[$("#topbar span").get(0).className.substring(0, 3)]),
+		default_nicks = $("#topbar span a").text(),
+		color = subs(storage.dchat_color, chromium? undefined : null, default_color),
+		nicks = subs(storage.dchat_names, chromium? undefined : null, default_nicks);
+	
+	(function () {
+		// this section sets up the chat options menu
+		var chat_opts_display = false,
+			topbar = $("#topbar"), 
+			menu = $(
+				'<ul class="darkchoc logicalbox">' +
+				'<li><label>Color</label> <input id="dchat_color" type="text" /></li>' + 
+				'<li><label>Nicks</label> <input id="dchat_nicks" type="text" /></li>' + 
+				'<li><a id="dchat_hide" href="#"> - Hide - </a></li>' + 
+				'</ul>'
+			);
+		// The menu has inputs which receive text, but Pseudo has a set of 
+		// keydown and keyup events on the document which focus the chat 
+		// textarea. This stops those events from propagating up past the <ul>.
+		function stop_propagation(event) {
+			event.stopPropagation();
+		}
+		menu.get(0).addEventListener("keydown", stop_propagation, true);
+		menu.get(0).addEventListener("keyup", stop_propagation, true);
+		
+		// HTML and CSS for the "Chat options" link and the menu and its items.
+		$("a[href=?page=editstats]", topbar).before(
+			'<a id="dchat_opts" href="#">Chat Options</a>&nbsp;&nbsp; | &nbsp;&nbsp;'
+		);
+		menu.css({
+			display: "none", position: "fixed", right: "90px", top: "12px", 
+			"list-style-type": "none", "list-style-image": "none", 
+			width: "150px", padding: "0.5em" 
+		});
+		$("li", menu).css({
+			position: "relative", height: "20px", width: "130px", 
+			"text-align": "center"
+		});
+		$("label", menu).css({position: "absolute", top: "3px", left: "0px"});
+		$("#dchat_hide", menu).css({position: "relative", top: "5px"})
+			.click(function () {
+				menu.slideUp("slow");
+				chat_opts_display = false;
+			});
+		$("#dchat_opts").click(function () {
+			if (chat_opts_display) {
+				menu.slideUp("slow");
+				chat_opts_display = false;
+			} else {
+				menu.slideDown("slow");
+				chat_opts_display = true;
+			}
+		});
+		// bind events to the text boxes created:
+		$("input", menu).css({width: "90px", position: "absolute", right: "0px"})
+			.map(function () {
+				switch (this.id) {
+					case "dchat_color":
+						this.value = color;
+						$(this).change(function () {
+							color = subs(this.value, "", default_color);
+							storage.dchat_color = color;
+						});
+					break;
+					case "dchat_nicks":
+						this.value = nicks;
+						$(this).change(function () {
+							nicks = subs(this.value, "", default_nicks);
+							storage.dchat_nicks = nicks;
+						});
+					break;
+				}
+			});
+		$(document.body).append(menu);
+	}());
+	function colorize(string) {
+		// `either` detects either a color start or end tag;
+		// `empty` detects a color tag containing only whitespace.
+		var either = /\[#[0-9a-f]{6}\]|\[\/#\]/gi,
+			empty  = /\[#[0-9a-f]{6}\](\s*)\[\/#\]/gi,
+			denest = function (x) {
+				return "[/#]" + (x === "[/#]" ? color : x);
+			},
+			tmp = color + string.replace(either, denest) + "[/#]";	
+		return tmp.replace(empty, "$1");
+	}
+	function handle_pm(string, fun) {
+		var regex = /^(?:@[a-z0-9 ]+: )?/i,
+			match = regex.exec(string)[0];
+		return match + fun(string.slice(match.length));
+	}
+	function chat_edit(id) {
+		var text = document.getElementById(id),
+			multimatch = false;
+
+		// Enter key -- color overrides.
+		text.addEventListener("keydown", function (event) {
+			if (event.keyCode === 13) { // Enter
+				try {
+					text.value = handle_pm(text.value, function (v) {
+						var id;
+						if (v.slice(0, 4) === "/me ") {
+							id = $("#topbar span a").get(0).href
+								.match(/[?&]u=(\d+)/)[1];
+							v = "[u" + id + "] " + v.slice(4);
+						}
+						return colorize(v);
+					});
+				} catch (e) {
+					alert(e);
+				}
+			}
+		}, false);
+		
+		// Tab key -- tab complete
+		function tab_complete(name, params) {
+			var p = params, 
+				base = p.string.slice(0, p.start) + name;
+			if (p.start === 0 || 
+				p.start === 1 && base.charAt(0) === "@") {
+				base += ': ';
+			}
+			p.target.value = base + p.string.slice(p.end);
+			p.target.selectionStart = base.length;
+			p.target.selectionEnd = base.length;
+			p.target.focus();
+		}
+		$("#input_area").keydown(function (event) {
+			if (event.keyCode === 9) { // Tab
+				if (multimatch === false) {
+					var start, end, members, match, regex, params;
+					end = this.selectionEnd;
+					regex = /\b([a-z0-9]*?)$/i;
+					match = this.value.substring(0, end)
+						.match(regex)[1].toLowerCase();
+					start = end - match.length;
+					params = { 
+						start: start, 
+						end: end, 
+						string: this.value,
+						target: this
+					};
+					members = $("#PeopleList span.nobr a")
+						.map(function () { return this.innerHTML; })
+						.filter(function () {
+							return (this.length >= match.length) &&  
+								this.slice(0, match.length).toLowerCase() === match;
+						});
+					if (members.length > 1) {
+						multimatch = {
+							current: 0, 
+							members: members, 
+							params: params,
+							increment: function () {
+								this.current += 1;
+								this.current %= this.members.length;
+							},
+							get: function () {
+								return this.members[this.current];
+							}
+						};
+					}
+					if (members.length >= 1) {
+						tab_complete(members[0], params);
+					}
+				} 
+			} else {
+				multimatch = false;
+			}
+		});
+		$("input.button").keydown(function (event) {
+			if (event.keyCode === 9 && multimatch !== false) {
+				multimatch.increment();
+				tab_complete(multimatch.get(), multimatch.params);
+			}
+		});
+	}
+
+
+	// create the params[] associative array.
+	if (typeof local_window.location.search === "string") {
+		local_window.location.search.slice(1).split("&").map(
+			function (x) {
+				x = x.split("=");
+				params[x[0]] = x.slice(1).join("=");
+			}
+		);
+	}
+
+	// branch based on location
+	switch (local_window.location.pathname) {
+		case "/":
+		case "/index.php":
+			switch (params.page) {
+				case "chat":
+					chat_edit("input_area");
+				break;
+			}
+		break;
+		/* commented out until I can figure out how to get this working.
+		case "forum_thread":
+		case "forum":
+			$("form textarea").blur(function () {
+				this.value = colorize(this.value);
+			});
+		break;
+		*/
+	}
+});
