@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Drostie's FigHunter Chat Script
-// @version       1.01a
+// @version       1.01b
 // @namespace     http://code.drostie.org/
 // @include       http://www.fighunter.com/*
 // @match         http://www.fighunter.com/*
@@ -264,11 +264,10 @@ sandbox("init URL params", function () {
     };
 });
 
-sandbox("init custom color", function () {
-    "use strict";
-    storage.dchat_color = "[#70b32d]";
-});
-
+//sandbox("init custom color", function () {
+//    "use strict";
+//    storage.dchat_color = "[#70b32d]";
+//});
 
 // stop if user is not logged in:
 running = running && $("#topbar span").length > 0;
