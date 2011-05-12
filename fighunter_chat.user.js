@@ -459,6 +459,26 @@ function chat_edit() {
     });
 }
 
+function history_context() {
+    $("tr a.by").map(function () {
+        var id, row, cell, link;
+        id = this.getAttribute("onmouseover").match(/(\d+),this\);$/)[1];
+        if (id === null) { 
+            return;
+        }
+        link = document.createElement("a");
+        link.innerHTML = "[Context]";
+        link.setAttribute("href", "?page=comment_single&c=" + id);
+        
+        row = this;
+        while (row.nodeName.toLowerCase() !== "tr") {
+            row = row.parentNode;
+        }
+        cell = row.childNodes[0];
+        cell.appendChild(document.createElement("br"));
+        cell.appendChild(link);
+    });
+}
 
 // branch based on location
 switch (local_window.location.pathname) {
@@ -467,6 +487,9 @@ switch (local_window.location.pathname) {
         switch (dchat.url_params.page) {
             case "chat":
                 sandbox("init chat_edit", chat_edit);
+            break;
+            case "history_comments":
+                sandbox("add context links", history_context);
             break;
         }
     break;
