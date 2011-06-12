@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Drostie's FigHunter Chat Script
-// @version       1.01b
+// @version       1.03
 // @namespace     http://code.drostie.org/
 // @include       http://www.fighunter.com/*
 // @match         http://www.fighunter.com/*
@@ -264,11 +264,6 @@ sandbox("init URL params", function () {
     };
 });
 
-//sandbox("init custom color", function () {
-//    "use strict";
-//    storage.dchat_color = "[#70b32d]";
-//});
-
 // stop if user is not logged in:
 running = running && $("#topbar span").length > 0;
 
@@ -480,6 +475,49 @@ function history_context() {
     });
 }
 
+function user_rating(id) {
+    "use strict";
+    function sum(arr) {
+        var x = 0;
+        arr.map(function (n) { x += n; });
+        return x;
+    }
+    function mean_rating(arr) {
+        return sum(arr.map(function (x, i) {
+            return x * (i - 3);
+        })) / sum(arr);
+    }
+    function round(x) {
+        return Math.round(10000 * x) / 10000;
+    }
+    function rating_dev(arr) {
+        var m = mean_rating(arr);
+        var s = Math.sqrt(
+            sum(arr.map(function (x, i) {
+                return x * Math.pow(i - 3 - m, 2)
+            })) / (sum(arr) - 1)
+        ) / Math.sqrt(sum(arr));
+        return round(m) + " ± " + round(s);
+    }
+    function reverse(x) {
+        var y = [], i;
+        for(i = 0; i < x.length; i += 1) {
+            y.push(x[x.length - i - 1]);
+        }
+        return y;
+    }
+    $.get("http://www.fighunter.com/get7ratings.php",
+        {db: "FHF2_accounts", sid: id}, function (data) {
+            var x =  $("span", $(data)).map(function () {
+                return this.innerHTML - 0;
+            });
+            var location = $("td.ar1")[0].parentNode.parentNode,
+                row = $("tr", $('<table><tr><td class="ar1">' + 
+                    'Actual rating:</td><td>' + rating_dev(reverse(x)) + 
+                    '</td></tr></table>'))[0];
+            location.appendChild(row);
+    });
+}
 // branch based on location
 switch (local_window.location.pathname) {
     case "/":
@@ -490,6 +528,12 @@ switch (local_window.location.pathname) {
             break;
             case "history_comments":
                 sandbox("add context links", history_context);
+            break;
+            case "userpage":
+                sandbox("add real rating", function () {
+                    "use strict";
+                    user_rating(dchat.url_params.u);
+                });
             break;
         }
     break;

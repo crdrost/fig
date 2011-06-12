@@ -4,7 +4,7 @@ been interested in my chat room scripts which provide me with automatic text
 coloration and tab-completion and so on. I have decided to make these public
 via github.
 
-# Current Features #
+# Chat Features #
 * Tab-complete: other chatters' names can be completed by typing the first few 
   characters of their name and then pressing the tab key. If there are multiple 
   possibilities, keep pressing tab to cycle through them. (There may be bugs if 
@@ -18,6 +18,17 @@ via github.
   is automatically applied to any text that you write. If you write your own 
   colors within a text, the script will automatically reformat your text so 
   that your own colors take priority. 
+
+# Misc Features #
+* Comments in Context: when you are looking at a user's comment history, it 
+  is the case that you cannot see who they were replying to, or who replied to 
+  them, because the link only brings you to the top of the comment thread. This
+  add-on provides a little link underneath the [Reply] link, called [Context],
+  which lets you see the comment in its proper context.
+* Real ratings: People often express interest at seeing their "actual" rating,
+  including decimal points, which Pseudo rounds into the public 7-point rating. 
+  This add-on lets you see this on their profile page, just beneath their IP 
+  address.
 
 # How to Install #
 
