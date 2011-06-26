@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Drostie's FigHunter Chat Script
-// @version       1.4a
+// @version       1.4b
 // @namespace     http://code.drostie.org/
 // @include       http://www.fighunter.com/*
 // @match         http://www.fighunter.com/*
@@ -20,7 +20,7 @@ var running = true,
     jQuery = window.jQuery;
     
 function sandbox(section, f) {
-    "use strict";
+    // "use strict";
     try { 
         if (running) {
             return f();
@@ -35,7 +35,7 @@ function sandbox(section, f) {
 }
 
 sandbox("test settings storage", function () {
-    "use strict";
+    // "use strict";
     function storage_test() {
         storage.storage_test = 123;
         storage.storage_test += 1;
@@ -61,7 +61,7 @@ var dchat = {}, // global namespace for chat script variables.
     $ = jQuery;
 
 sandbox("init URL params", function () {
-    "use strict";
+    // "use strict";
     dchat.url_params = {};
     if (typeof local_window.location.search === "string") {
         local_window.location.search.slice(1).split("&").map(
@@ -88,13 +88,13 @@ sandbox("init URL params", function () {
 running = running && $("#topbar span").length > 0;
 
 sandbox("init custom params", function () {
-    "use strict";
+    // "use strict";
     // e.g. :: storage.dchat_color = "[#d48933]";
 });
 
 // Every page gets the "Chat Options" menu.
 sandbox("chat options menu", function () {
-    "use strict";
+    // "use strict";
     var topbar = $("#topbar"),
         theme = $("span", topbar).get(0).className.substring(0, 3),
         default_color = dchat.default_colors[theme],
@@ -191,7 +191,7 @@ sandbox("chat options menu", function () {
 });
 
 function chat_edit() {
-    "use strict";
+    // "use strict";
     function colorize(string) {
         // `either` detects either a color start or end tag;
         // `empty` detects a color tag containing only whitespace.
@@ -306,7 +306,7 @@ function chat_edit() {
 }
 
 function history_context() {
-    "use strict";
+    // "use strict";
     $("tr a.by").map(function () {
         var id, row, cell, link;
         id = this.getAttribute("onmouseover").match(/(\d+),this\);$/)[1];
@@ -328,7 +328,7 @@ function history_context() {
 }
 
 function user_rating(id) {
-    "use strict";
+    // "use strict";
     function sum(arr) {
         var x = 0;
         arr.map(function (n) { x += n; });
@@ -383,7 +383,7 @@ switch (local_window.location.pathname) {
             break;
             case "userpage":
                 sandbox("add real rating", function () {
-                    "use strict";
+                    // "use strict";
                     user_rating(dchat.url_params.u);
                 });
             break;
