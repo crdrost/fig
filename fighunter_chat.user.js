@@ -1,10 +1,14 @@
 // ==UserScript==
 // @name          Drostie's FigHunter Chat Script
-// @version       1.4
+// @version       1.4a
 // @namespace     http://code.drostie.org/
 // @include       http://www.fighunter.com/*
 // @match         http://www.fighunter.com/*
 // ==/UserScript==
+
+
+/*jslint white: false, onevar: true, undef: true, nomen: true, regexp: true, plusplus: true, bitwise: true, newcap: false, strict: true */
+/*global alert, document, window, unsafeWindow, decodeURIComponent */
 
 /* PRELUDE: Contains a bunch of utilities to help with debugging. */
 
@@ -31,6 +35,7 @@ function sandbox(section, f) {
 }
 
 sandbox("test settings storage", function () {
+    "use strict";
     function storage_test() {
         storage.storage_test = 123;
         storage.storage_test += 1;
@@ -50,12 +55,8 @@ sandbox("test settings storage", function () {
     }
 });
 
-// SCRIPT: the remainder of this file can be scanned with JSLint.
+/* SCRIPT */
 
-/*jslint white: false, onevar: true, undef: true, nomen: true, regexp: true, plusplus: true, bitwise: true, newcap: false, strict: true */
-/*global jQuery, storage: true, alert, document, local_window, decodeURIComponent, running: true, sandbox */
-
-//
 var dchat = {}, // global namespace for chat script variables.
     $ = jQuery;
 
@@ -360,7 +361,7 @@ function user_rating(id) {
     $.get("http://www.fighunter.com/get7ratings.php",
         {db: "FHF2_accounts", sid: id}, function (data) {
             var x =  $("span", $(data)).map(function () {
-                return this.innerHTML - 0;
+                return Number(this.innerHTML);
             }),
                 location = $("td.ar1")[0].parentNode.parentNode,
                 row = $("tr", $('<table><tr><td class="ar1">' + 
