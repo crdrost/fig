@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Drostie's FigHunter Chat Script
-// @version       1.4c
+// @version       1.4d
 // @namespace     http://code.drostie.org/
 // @include       http://www.fighunter.com/*
 // @match         http://www.fighunter.com/*
@@ -155,7 +155,8 @@ sandbox("chat options menu", function () {
     });
     $("label", menu).css({position: "absolute", top: "3px", left: "0px"});
     $("#dchat_hide", menu).css({position: "relative", top: "5px"});
-    $("input", menu).css({width: "90px", position: "absolute", right: "0px"});
+    $("input", menu).css({position: "absolute", right: "0px"});
+    $("input[type=text]", menu).css({width: "90px"});
     // bind events to the input elements created:
     function track(input, binding, default_value, type) {
         if (type === "checkbox") {
