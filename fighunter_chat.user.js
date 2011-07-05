@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Drostie's FigHunter Chat Script
-// @version       1.5.1
+// @version       1.5.2
 // @namespace     http://code.drostie.org/
 // @include       http://www.fighunter.com/*
 // @match         http://www.fighunter.com/*
@@ -13,9 +13,10 @@
 /* PRELUDE: Contains a bunch of utilities to help with debugging. */
 
 var script_name = "Drostie's Fig Hunter Utils",
-    version = "1.5.0",
+    version = "1.5.2",
     running = true, 
-    local_window, storage;
+    local_window, 
+    storage;
     
 function sandbox(section, f) {
     "use strict";
@@ -25,7 +26,8 @@ function sandbox(section, f) {
         }
     } catch (e) {
         running = false;
-        alert("The '" + script_name + "' script generated an error:" + 
+        alert(
+            "The '" + script_name + "' script generated an error:" + 
             "\nSection: " + section +
             "\nError: " + e
         );
@@ -55,22 +57,27 @@ sandbox("test settings storage", function () {
 /* SCRIPT */
 
 var dchat = {}, // global namespace for chat script variables.
-    jQuery, $;
+    jQuery, 
+    $;
 
 sandbox("include jQuery", function () {
-    "use strict"
-    if (typeof local_window.jQuery === "function") {
-        jQuery = local_window.jQuery;
+    "use strict";
+    if (typeof window.jQuery === "function") {
+        jQuery = window.jQuery;
+    } else if (typeof unsafeWindow === "object" && 
+            typeof unsafeWindow.jQuery === "function") {
+        jQuery = unsafeWindow.jQuery;
     } else {
         try {
-            jQuery = build_jquery(local_window);
+            jQuery = build_jquery(window);
+            jQuery("body");
         } catch (e) {
-            var s = [e, 
-                typeof local_window.document,
-                local_window.document.defaultView === local_window,
-                typeof local_window.document.defaultView.jQuery
-            ].join("|");
-            throw s;
+            try {
+                jQuery = build_jquery(unsafeWindow);
+                jQuery("body");
+            } catch (f) {
+                throw e + "|" + f;
+            }
         }
     }
     $ = jQuery;
@@ -369,15 +376,15 @@ function user_rating(id) {
     function rating_dev(arr) {
         var m = mean_rating(arr),
             s = Math.sqrt(
-            sum(arr.map(function (x, i) {
-                return x * Math.pow(i - 3 - m, 2);
-            })) / (sum(arr) - 1)
-        ) / Math.sqrt(sum(arr));
+                sum(arr.map(function (x, i) {
+                    return x * Math.pow(i - 3 - m, 2);
+                })) / (sum(arr) - 1)
+            ) / Math.sqrt(sum(arr));
         return round(m) + " ± " + round(s);
     }
     function reverse(x) {
         var y = [], i;
-        for(i = 0; i < x.length; i += 1) {
+        for (i = 0; i < x.length; i += 1) {
             y.push(x[x.length - i - 1]);
         }
         return y;
