@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Drostie's FigHunter Chat Script
-// @version       1.5.0
+// @version       1.5.1
 // @namespace     http://code.drostie.org/
 // @include       http://www.fighunter.com/*
 // @match         http://www.fighunter.com/*
@@ -62,7 +62,16 @@ sandbox("include jQuery", function () {
     if (typeof local_window.jQuery === "function") {
         jQuery = local_window.jQuery;
     } else {
-        jQuery = build_jquery(local_window);
+        try {
+            jQuery = build_jquery(local_window);
+        } catch (e) {
+            var s = [e, 
+                typeof local_window.document,
+                local_window.document.defaultView === local_window,
+                typeof local_window.document.defaultView.jQuery
+            ].join("|");
+            throw s;
+        }
     }
     $ = jQuery;
 });
@@ -415,18 +424,18 @@ switch (local_window.location.pathname) {
 }
 
 function build_jquery(win) {
-    /*!
+/*!
  * jQuery JavaScript Library v1.4.2
  * http://jquery.com/
  *
  * Copyright 2010, John Resig
- * Dual licensed under the MIT or GPL Version 2 licenses.
+ * Used under the MIT license.
  * http://jquery.org/license
  *
  * Includes Sizzle.js
  * http://sizzlejs.com/
  * Copyright 2010, The Dojo Foundation
- * Released under the MIT, BSD, and GPL Licenses.
+ * Used under the MIT license.
  *
  * Date: Sat Feb 13 22:33:48 2010 -0500
  */
@@ -569,5 +578,4 @@ d,e);d={top:b.top-e.top+j,left:b.left-e.left+i};"using"in b?b.using.call(a,d):f.
 f.top,left:d.left-f.left}},offsetParent:function(){return this.map(function(){for(var a=this.offsetParent||s.body;a&&!/^body|html$/i.test(a.nodeName)&&c.css(a,"position")==="static";)a=a.offsetParent;return a})}});c.each(["Left","Top"],function(a,b){var d="scroll"+b;c.fn[d]=function(f){var e=this[0],j;if(!e)return null;if(f!==w)return this.each(function(){if(j=wa(this))j.scrollTo(!a?f:c(j).scrollLeft(),a?f:c(j).scrollTop());else this[d]=f});else return(j=wa(e))?"pageXOffset"in j?j[a?"pageYOffset":
 "pageXOffset"]:c.support.boxModel&&j.document.documentElement[d]||j.document.body[d]:e[d]}});c.each(["Height","Width"],function(a,b){var d=b.toLowerCase();c.fn["inner"+b]=function(){return this[0]?c.css(this[0],d,false,"padding"):null};c.fn["outer"+b]=function(f){return this[0]?c.css(this[0],d,false,f?"margin":"border"):null};c.fn[d]=function(f){var e=this[0];if(!e)return f==null?null:this;if(c.isFunction(f))return this.each(function(j){var i=c(this);i[d](f.call(this,j,i[d]()))});return"scrollTo"in
 e&&e.document?e.document.compatMode==="CSS1Compat"&&e.document.documentElement["client"+b]||e.document.body["client"+b]:e.nodeType===9?Math.max(e.documentElement["client"+b],e.body["scroll"+b],e.documentElement["scroll"+b],e.body["offset"+b],e.documentElement["offset"+b]):f===w?c.css(e,d):this.css(d,typeof f==="string"?f:f+"px")}});A.jQuery=A.$=c})(win);
-return win.jQuery;
 }
